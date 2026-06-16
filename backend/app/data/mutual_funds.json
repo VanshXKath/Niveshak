@@ -1,0 +1,37 @@
+[
+  {
+    "category": "Large Cap Index",
+    "risk": "Moderate",
+    "horizon_years": "5+",
+    "example_funds": ["UTI Nifty 50 Index Fund", "HDFC Index Fund Nifty 50 Plan"],
+    "why": "Good for beginners who want market returns with lower stock-picking risk."
+  },
+  {
+    "category": "Flexi Cap",
+    "risk": "Moderate-High",
+    "horizon_years": "5+",
+    "example_funds": ["Parag Parikh Flexi Cap Fund", "HDFC Flexi Cap Fund"],
+    "why": "Fund manager can shift between large, mid, and small caps."
+  },
+  {
+    "category": "Mid Cap",
+    "risk": "High",
+    "horizon_years": "7+",
+    "example_funds": ["Motilal Oswal Midcap Fund", "Kotak Emerging Equity Fund"],
+    "why": "Higher growth potential but more volatility than large caps."
+  },
+  {
+    "category": "Debt / Liquid",
+    "risk": "Low",
+    "horizon_years": "0-3",
+    "example_funds": ["HDFC Liquid Fund", "ICICI Prudential Liquid Fund"],
+    "why": "Park emergency funds or short-term goals with lower risk."
+  },
+  {
+    "category": "ELSS (Tax Saver)",
+    "risk": "Moderate-High",
+    "horizon_years": "3+ lock-in",
+    "example_funds": ["Mirae Asset Tax Saver Fund", "Canara Robeco Equity Tax Saver"],
+    "why": "Equity exposure with Section 80C tax benefit and 3-year lock-in."
+  }
+]

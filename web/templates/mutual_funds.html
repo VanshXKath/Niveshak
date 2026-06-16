@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="page-title">Mutual Funds</h2>
+<p class="page-subtitle">Goal-based recommendations from Python rules engine.</p>
+
+<form method="get" action="/mutual-funds" class="card">
+  <input type="hidden" name="submitted" value="true" />
+  <div class="form-row">
+    <div><label class="label">Goal</label>
+      <select class="select" name="goal">
+        <option value="wealth_creation" {% if goal == "wealth_creation" %}selected{% endif %}>Wealth creation</option>
+        <option value="tax_saving" {% if goal == "tax_saving" %}selected{% endif %}>Tax saving</option>
+        <option value="emergency_fund" {% if goal == "emergency_fund" %}selected{% endif %}>Emergency fund</option>
+      </select>
+    </div>
+    <div><label class="label">Risk</label>
+      <select class="select" name="risk">
+        <option value="low" {% if risk == "low" %}selected{% endif %}>Low</option>
+        <option value="moderate" {% if risk == "moderate" %}selected{% endif %}>Moderate</option>
+        <option value="high" {% if risk == "high" %}selected{% endif %}>High</option>
+      </select>
+    </div>
+    <div><label class="label">Horizon (years)</label><input class="input" name="horizon" type="number" value="{{ horizon }}" min="1" max="30" /></div>
+    <div><label class="label">Monthly SIP (₹)</label><input class="input" name="sip" type="number" value="{{ sip }}" min="500" step="500" /></div>
+  </div>
+  <button type="submit" class="btn btn-primary">Get Recommendations</button>
+</form>
+
+{% if data %}
+<p class="alert alert-info" style="margin-top:1rem;">{{ data.profile_summary }}</p>
+{% for rec in data.recommendations %}
+<div class="card" style="margin-top:0.75rem;">
+  <h3>{{ rec.category }} <span class="badge badge-green">SIP ₹{{ "{:,.0f}".format(rec.suggested_sip) }}</span></h3>
+  <p style="color:var(--text-muted); margin:0.5rem 0;">{{ rec.why }}</p>
+  <p><strong>Examples:</strong> {{ rec.example_funds | join(", ") }}</p>
+</div>
+{% endfor %}
+<p class="disclaimer">{{ data.beginner_summary }}</p>
+{% endif %}
+{% endblock %}

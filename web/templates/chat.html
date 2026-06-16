@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="page-title">AI Company Chat</h2>
+<p class="page-subtitle">Upload PDF & ask questions — Python RAG backend.</p>
+
+{% if message %}<div class="alert alert-success">{{ message }}</div>{% endif %}
+{% if error %}<div class="alert alert-error">{{ error }}</div>{% endif %}
+
+<div class="grid grid-2">
+  <div class="card">
+    <h3>Upload annual report</h3>
+    <form method="post" action="/chat/upload" enctype="multipart/form-data" style="margin-top:0.75rem;">
+      <label class="label">Symbol</label>
+      <input class="input" name="symbol" value="{{ symbol }}" style="margin-bottom:0.75rem;" />
+      <label class="label">PDF file</label>
+      <input class="input" name="file" type="file" accept=".pdf" style="margin-bottom:0.75rem;" required />
+      <button type="submit" class="btn btn-ghost">Index Document</button>
+    </form>
+  </div>
+  <div class="card">
+    <h3>Ask a question</h3>
+    <form method="post" action="/chat/ask" style="margin-top:0.75rem;">
+      <label class="label">Symbol</label>
+      <input class="input" name="symbol" value="{{ symbol }}" style="margin-bottom:0.75rem;" />
+      <label class="label">Question</label>
+      <input class="input" name="question" value="{{ question or '' }}" placeholder="What are revenue drivers?" style="margin-bottom:0.75rem;" required />
+      <button type="submit" class="btn btn-primary">Ask AI</button>
+    </form>
+    {% if answer %}
+    <div style="margin-top:1rem; color:var(--text-muted); line-height:1.6;">
+      <p>{{ answer }}</p>
+      {% if used_ai %}<span class="badge badge-green">Gemini AI</span>{% else %}<span class="badge badge-yellow">RAG mode</span>{% endif %}
+      {% if sources %}
+      <details style="margin-top:0.75rem;"><summary>Sources</summary>
+        {% for source in sources %}<p style="font-size:0.85rem;">{{ source }}</p>{% endfor %}
+      </details>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

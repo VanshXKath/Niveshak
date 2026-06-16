@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="page-title">Sector Analysis</h2>
+<p class="page-subtitle">Sector momentum ranked in Python.</p>
+
+<form method="get" action="/sectors" class="form-row">
+  <div><label class="label">Period</label>
+    <select class="select" name="period">
+      {% for p in ["1mo", "3mo", "6mo"] %}<option value="{{ p }}" {% if period == p %}selected{% endif %}>{{ p }}</option>{% endfor %}
+    </select>
+  </div>
+  <div style="display:flex;align-items:flex-end;"><button type="submit" class="btn btn-primary" style="width:100%">Rank Sectors</button></div>
+</form>
+
+<div class="card" style="margin-top:1rem;">
+  <p style="color:var(--text-muted); margin-bottom:1rem;">{{ data.beginner_summary }}</p>
+  {% if chart_html %}<div class="chart-box">{{ chart_html | safe }}</div>{% endif %}
+</div>
+
+<div class="card table-wrap" style="margin-top:1rem;">
+  <table>
+    <thead><tr><th>Rank</th><th>Sector</th><th>Change %</th><th>Momentum</th><th>Top Stock</th></tr></thead>
+    <tbody>
+      {% for sector in data.sectors %}
+      <tr>
+        <td>#{{ sector.rank }}</td>
+        <td>{{ sector.sector }}</td>
+        <td>{{ sector.average_change_percent or "—" }}%</td>
+        <td>{{ sector.momentum_score }}</td>
+        <td>{{ sector.top_stock or "—" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

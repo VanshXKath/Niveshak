@@ -16,10 +16,12 @@ Streamlit Frontend
 FastAPI Backend
   |
   v
-yfinance
+StockService (fallback chain)
   |
-  v
-Yahoo Finance market data
+  +--> yfinance
+  +--> Yahoo chart API (direct HTTP)
+  +--> NSE India API
+  +--> BSE India API
 ```
 
 ## Why We Use FastAPI
@@ -54,9 +56,14 @@ For Phase 1, it lets us create:
 
 Later, if we want a more advanced frontend, we can move to React. For now, Streamlit is perfect for learning and fast product building.
 
-## Why We Use yfinance
+## Why We Use Multiple Data Providers
 
-`yfinance` is a Python library that fetches market data from Yahoo Finance.
+Phase 1 now uses a **fallback chain** so the app keeps working when one source fails:
+
+1. **yfinance** — richest data (PE ratio, sector, market cap).
+2. **Yahoo chart API** — direct HTTP call, often works when yfinance is rate-limited.
+3. **NSE India API** — official Indian exchange data (may be blocked on some networks).
+4. **BSE India API** — backup for popular stocks using BSE scrip codes.
 
 For Indian NSE stocks, Yahoo Finance symbols usually end with `.NS`.
 
@@ -84,8 +91,11 @@ This file defines stock API URLs.
 
 It currently has:
 
+- `/api/stocks/search?q=reliance`
 - `/api/stocks/{symbol}/summary`
 - `/api/stocks/{symbol}/history`
+
+The `/search` route must be defined before `/{symbol}` routes so FastAPI does not treat `search` as a stock symbol.
 
 Routes should stay small. They receive requests and call service classes.
 
@@ -95,13 +105,20 @@ This is where stock data work happens.
 
 It:
 
+- searches stocks by name or symbol,
 - cleans stock symbols,
 - calls `yfinance`,
 - extracts useful fields,
 - handles missing values,
 - creates beginner-friendly summaries.
 
+Search uses Yahoo Finance first, then falls back to a local list in `backend/app/data/nse_popular_stocks.json` for reliability.
+
 Later, technical analysis and fundamental analysis engines will be separate services.
+
+### `backend/app/data/nse_popular_stocks.json`
+
+A curated list of popular NSE stocks used when live search is slow or unavailable. You can add more symbols here as you learn the market.
 
 ### `backend/app/models/stock.py`
 
@@ -152,6 +169,14 @@ When a user searches `TCS`:
 7. FastAPI returns clean JSON.
 8. Streamlit displays it.
 
+### `tests/`
+
+Automated tests verify symbol normalization, API routes, and service logic using mocks. Run with `python -m pytest`.
+
+### `scripts/`
+
+PowerShell helpers for setup and running servers on Windows.
+
 ## How To Modify Later
 
 To add a new backend feature:
@@ -160,6 +185,7 @@ To add a new backend feature:
 2. Add a response model in `backend/app/models`.
 3. Add a route in `backend/app/api/routes`.
 4. Display it in `frontend/streamlit_app.py`.
+5. Add a test in `tests/`.
 
 Example future feature:
 

@@ -1,16 +1,26 @@
 from __future__ import annotations
 
+import json
 import math
+from pathlib import Path
 from typing import Any
 
 import pandas as pd
-import yfinance as yf
 
 from backend.app.models.stock import (
     StockHistoryPoint,
     StockHistoryResponse,
+    StockSearchResponse,
+    StockSearchResult,
     StockSummaryResponse,
 )
+from backend.app.services.providers.base import ProviderHistoryData, ProviderSummaryData
+from backend.app.services.providers.bse_provider import BSEProvider
+from backend.app.services.providers.nse_provider import NSEProvider
+from backend.app.services.providers.yahoo_chart_provider import YahooChartProvider
+from backend.app.services.providers.yfinance_provider import YFinanceProvider
+
+NSE_POPULAR_STOCKS_PATH = Path(__file__).resolve().parent.parent / "data" / "nse_popular_stocks.json"
 
 
 class StockDataError(Exception):
@@ -18,7 +28,58 @@ class StockDataError(Exception):
 
 
 class StockService:
-    """Small service class that keeps all yfinance logic in one place."""
+    """Fetches stock data using multiple providers with automatic fallback."""
+
+    def __init__(self) -> None:
+        self._popular_stocks = self._load_popular_stocks()
+        self._summary_providers = [
+            YahooChartProvider(),
+            YFinanceProvider(),
+            NSEProvider(),
+            BSEProvider(),
+        ]
+        self._history_providers = [
+            YahooChartProvider(),
+            YFinanceProvider(),
+            NSEProvider(),
+        ]
+        self._search_providers = [
+            YFinanceProvider(),
+            NSEProvider(),
+        ]
+
+    def search_stocks(self, query: str, limit: int = 10) -> StockSearchResponse:
+        cleaned_query = query.strip()
+        if not cleaned_query:
+            raise StockDataError("Please enter a company name or symbol to search.")
+
+        limit = max(1, min(limit, 25))
+        results: list[StockSearchResult] = []
+        seen_symbols: set[str] = set()
+
+        for provider in self._search_providers:
+            for item in provider.search(cleaned_query, limit=limit):
+                symbol = item.symbol
+                if symbol in seen_symbols:
+                    continue
+                seen_symbols.add(symbol)
+                results.append(item)
+                if len(results) >= limit:
+                    break
+            if len(results) >= limit:
+                break
+
+        if len(results) < limit:
+            for item in self._search_local_popular_stocks(cleaned_query, limit=limit):
+                symbol = item.symbol
+                if symbol in seen_symbols:
+                    continue
+                seen_symbols.add(symbol)
+                results.append(item)
+                if len(results) >= limit:
+                    break
+
+        return StockSearchResponse(query=cleaned_query, results=results[:limit])
 
     def normalize_symbol(self, symbol: str) -> str:
         cleaned = symbol.strip().upper()
@@ -32,86 +93,129 @@ class StockService:
 
     def get_stock_summary(self, symbol: str) -> StockSummaryResponse:
         yahoo_symbol = self.normalize_symbol(symbol)
-        ticker = yf.Ticker(yahoo_symbol)
-        info = self._get_ticker_info(ticker)
-        fast_info = self._get_fast_info(ticker)
-
-        current_price = self._safe_float(
-            info.get("currentPrice")
-            or info.get("regularMarketPrice")
-            or self._fast_info_value(fast_info, "last_price")
-        )
-        previous_close = self._safe_float(info.get("previousClose") or self._fast_info_value(fast_info, "previous_close"))
-        day_high = self._safe_float(info.get("dayHigh") or self._fast_info_value(fast_info, "day_high"))
-        day_low = self._safe_float(info.get("dayLow") or self._fast_info_value(fast_info, "day_low"))
-        pe_ratio = self._safe_float(info.get("trailingPE"))
-
-        if not info and current_price is None:
+        summary = self._first_summary(yahoo_symbol)
+        if summary is None or summary.current_price is None:
             raise StockDataError(
-                "The market data provider is not returning data right now. "
-                "This can happen because free data sources sometimes rate-limit requests. "
-                "Please try again after a few minutes."
+                "All market data providers failed for this stock. "
+                "We tried Yahoo Finance, NSE India, and BSE India. Please try again in a few minutes."
             )
 
         return StockSummaryResponse(
-            symbol=yahoo_symbol,
-            company_name=info.get("longName") or info.get("shortName") or yahoo_symbol,
-            exchange=info.get("exchange") or self._fast_info_value(fast_info, "exchange"),
-            currency=info.get("currency") or self._fast_info_value(fast_info, "currency"),
-            current_price=current_price,
-            previous_close=previous_close,
-            day_high=day_high,
-            day_low=day_low,
-            volume=self._safe_int(info.get("volume") or self._fast_info_value(fast_info, "last_volume")),
-            market_cap=self._safe_int(info.get("marketCap") or self._fast_info_value(fast_info, "market_cap")),
-            pe_ratio=pe_ratio,
-            sector=info.get("sector"),
-            industry=info.get("industry"),
-            website=info.get("website"),
+            symbol=summary.symbol,
+            company_name=summary.company_name,
+            exchange=summary.exchange,
+            currency=summary.currency,
+            current_price=summary.current_price,
+            previous_close=summary.previous_close,
+            day_high=summary.day_high,
+            day_low=summary.day_low,
+            volume=summary.volume,
+            market_cap=summary.market_cap,
+            pe_ratio=summary.pe_ratio,
+            sector=summary.sector,
+            industry=summary.industry,
+            website=summary.website,
+            data_source=summary.data_source,
             beginner_summary=self._build_beginner_summary(
-                current_price=current_price,
-                previous_close=previous_close,
-                pe_ratio=pe_ratio,
-                sector=info.get("sector"),
+                current_price=summary.current_price,
+                previous_close=summary.previous_close,
+                pe_ratio=summary.pe_ratio,
+                sector=summary.sector,
+                data_source=summary.data_source,
             ),
         )
 
     def get_stock_history(self, symbol: str, period: str = "6mo", interval: str = "1d") -> StockHistoryResponse:
         yahoo_symbol = self.normalize_symbol(symbol)
-        ticker = yf.Ticker(yahoo_symbol)
-
-        try:
-            history = ticker.history(period=period, interval=interval)
-        except Exception as exc:
+        history = self._first_history(yahoo_symbol, period=period, interval=interval)
+        if history is None or not history.prices:
             raise StockDataError(
-                "Historical price data is temporarily unavailable from the market data provider. "
-                "Please try again after a few minutes."
-            ) from exc
-
-        if history.empty:
-            raise StockDataError(f"No historical price data found for '{symbol}'.")
-
-        history_table = history.reset_index()
-        date_column = "Date" if "Date" in history_table.columns else "Datetime"
-
-        prices = [
-            StockHistoryPoint(
-                date=row[date_column].strftime("%Y-%m-%d"),
-                open=self._safe_float(row.get("Open")),
-                high=self._safe_float(row.get("High")),
-                low=self._safe_float(row.get("Low")),
-                close=self._safe_float(row.get("Close")),
-                volume=self._safe_int(row.get("Volume")),
+                f"No historical price data found for '{symbol}' from any provider. "
+                "Please try a different period or try again later."
             )
-            for _, row in history_table.iterrows()
-        ]
 
         return StockHistoryResponse(
-            symbol=yahoo_symbol,
-            period=period,
-            interval=interval,
-            prices=prices,
+            symbol=history.symbol,
+            period=history.period,
+            interval=history.interval,
+            prices=history.prices,
+            data_source=history.data_source,
         )
+
+    def _first_summary(self, symbol: str) -> ProviderSummaryData | None:
+        best: ProviderSummaryData | None = None
+        for provider in self._summary_providers:
+            try:
+                summary = provider.get_summary(symbol)
+            except Exception:
+                continue
+            if summary is None:
+                continue
+            if best is None:
+                best = summary
+            else:
+                best = self._merge_summary(best, summary)
+            if best.current_price is not None and best.company_name:
+                if best.pe_ratio is not None or provider.name in {"yfinance", "yahoo_chart_api"}:
+                    return best
+        return best
+
+    def _first_history(self, symbol: str, period: str, interval: str) -> ProviderHistoryData | None:
+        for provider in self._history_providers:
+            try:
+                history = provider.get_history(symbol, period=period, interval=interval)
+            except Exception:
+                continue
+            if history is not None and history.prices:
+                return history
+        return None
+
+    def _merge_summary(self, primary: ProviderSummaryData, secondary: ProviderSummaryData) -> ProviderSummaryData:
+        return ProviderSummaryData(
+            symbol=primary.symbol or secondary.symbol,
+            company_name=primary.company_name or secondary.company_name,
+            exchange=primary.exchange or secondary.exchange,
+            currency=primary.currency or secondary.currency,
+            current_price=primary.current_price or secondary.current_price,
+            previous_close=primary.previous_close or secondary.previous_close,
+            day_high=primary.day_high or secondary.day_high,
+            day_low=primary.day_low or secondary.day_low,
+            volume=primary.volume or secondary.volume,
+            market_cap=primary.market_cap or secondary.market_cap,
+            pe_ratio=primary.pe_ratio or secondary.pe_ratio,
+            sector=primary.sector or secondary.sector,
+            industry=primary.industry or secondary.industry,
+            website=primary.website or secondary.website,
+            data_source=primary.data_source if primary.current_price else secondary.data_source,
+        )
+
+    def _load_popular_stocks(self) -> list[dict[str, str]]:
+        try:
+            with NSE_POPULAR_STOCKS_PATH.open(encoding="utf-8") as file:
+                return json.load(file)
+        except (OSError, json.JSONDecodeError):
+            return []
+
+    def _search_local_popular_stocks(self, query: str, limit: int) -> list[StockSearchResult]:
+        needle = query.strip().upper()
+        results: list[StockSearchResult] = []
+
+        for stock in self._popular_stocks:
+            symbol = stock["symbol"].upper()
+            name = stock["name"]
+            if needle in symbol or needle in name.upper():
+                results.append(
+                    StockSearchResult(
+                        symbol=symbol,
+                        name=name,
+                        exchange="NSE",
+                        quote_type="EQUITY",
+                    )
+                )
+            if len(results) >= limit:
+                break
+
+        return results
 
     def _build_beginner_summary(
         self,
@@ -119,6 +223,7 @@ class StockService:
         previous_close: float | None,
         pe_ratio: float | None,
         sector: str | None,
+        data_source: str,
     ) -> str:
         messages: list[str] = []
 
@@ -136,30 +241,18 @@ class StockService:
         if sector:
             messages.append(f"The company belongs to the {sector} sector.")
 
+        source_labels = {
+            "yfinance": "Yahoo Finance via yfinance",
+            "yahoo_chart_api": "Yahoo Finance chart API",
+            "nse_india": "NSE India official API",
+            "bse_india": "BSE India official API",
+        }
+        messages.append(f"Data source: {source_labels.get(data_source, data_source)}.")
+
         if not messages:
             return "Basic stock data is available. More beginner-friendly analysis will be added in later phases."
 
         return " ".join(messages)
-
-    def _get_ticker_info(self, ticker: yf.Ticker) -> dict[str, Any]:
-        try:
-            return ticker.info or {}
-        except Exception:
-            return {}
-
-    def _get_fast_info(self, ticker: yf.Ticker) -> Any:
-        try:
-            return ticker.fast_info
-        except Exception:
-            return {}
-
-    def _fast_info_value(self, fast_info: Any, key: str) -> Any:
-        if not fast_info:
-            return None
-        try:
-            return fast_info[key]
-        except Exception:
-            return None
 
     def _safe_float(self, value: Any) -> float | None:
         if value is None:

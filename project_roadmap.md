@@ -1,128 +1,28 @@
-# Project Roadmap
+# Project Roadmap — NiveshakAI
 
-This roadmap shows how we will build the platform step by step.
+## v1.0 Full Platform (current)
 
-## Phase 1: Setup, Stock Data Engine, Basic Dashboard
+All 10 feature engines are implemented as an MVP. We will improve accuracy, data sources, and UI polish phase by phase.
 
-Status: built in this version.
+| # | Feature | Status | Inspired by |
+|---|---------|--------|-------------|
+| 1 | Stock Information Engine | ✅ Built | Groww stock page |
+| 2 | Technical Analysis Engine | ✅ Built | StockEdge scans |
+| 3 | Fundamental Analysis Engine | ✅ Built | Screener.in ratios |
+| 4 | News Sentiment Analysis | ✅ Built | Groww news pulse |
+| 5 | Market Valuation Engine | ✅ Built | Screener.in market PE |
+| 6 | Mutual Fund Recommendations | ✅ Built | Groww goal planner |
+| 7 | AI Company Chatbot (RAG) | ✅ Built | Tradomate / research bots |
+| 8 | Sector Analysis Dashboard | ✅ Built | StockScans sector view |
+| 9 | Portfolio Analysis | ✅ Built | Groww portfolio |
+| 10 | Watchlist Intelligence | ✅ Built | Tradomate alerts |
 
-Goals:
+## Improvement backlog (v1.1+)
 
-- Create project architecture.
-- Set up FastAPI backend.
-- Set up Streamlit frontend.
-- Fetch stock summary data.
-- Fetch historical price data.
-- Show a beginner-friendly dashboard.
-
-Main learning:
-
-- Python project structure.
-- APIs.
-- Dashboard basics.
-- Git and GitHub basics.
-
-## Phase 2: Technical Analysis Engine
-
-Goals:
-
-- Calculate RSI.
-- Calculate moving averages.
-- Calculate MACD.
-- Add Bollinger Bands.
-- Detect simple trend direction.
-- Explain indicators in beginner-friendly language.
-
-Possible files:
-
-- `backend/app/services/technical_service.py`
-- `backend/app/models/technical.py`
-
-## Phase 3: Fundamental Analysis Engine
-
-Goals:
-
-- Analyze revenue, profit, debt, ROE, PE ratio, cash flow, and growth.
-- Generate pros, cons, risks, and opportunities.
-- Compare company valuation with sector averages when data is available.
-
-Learning:
-
-- Financial statements.
-- Valuation.
-- Business quality analysis.
-
-## Phase 4: News Sentiment Analysis
-
-Goals:
-
-- Fetch stock-related news.
-- Classify sentiment as positive, neutral, or negative.
-- Explain possible impact.
-
-Learning:
-
-- NLP.
-- Sentiment analysis.
-- Text classification.
-
-## Phase 5: AI Company Chatbot With RAG
-
-Goals:
-
-- Upload annual reports.
-- Extract text from PDFs.
-- Store chunks in FAISS.
-- Ask questions about company documents.
-
-Learning:
-
-- Embeddings.
-- Vector databases.
-- Retrieval-Augmented Generation.
-
-## Phase 6: Mutual Fund Recommendation Engine
-
-Goals:
-
-- Ask user about risk appetite, investment duration, goals, and SIP amount.
-- Recommend suitable fund categories.
-- Explain risk in simple language.
-
-Learning:
-
-- Goal-based investing.
-- Risk profiling.
-- Recommendation systems.
-
-## Phase 7: Sector Analysis Dashboard
-
-Goals:
-
-- Track sector performance.
-- Rank strongest sectors.
-- Detect sector momentum.
-
-Learning:
-
-- Relative strength.
-- Sector rotation.
-- Market breadth.
-
-## Phase 8: Optimization And Deployment
-
-Goals:
-
-- Add database storage.
-- Move from SQLite to PostgreSQL.
-- Add authentication.
-- Improve caching.
-- Deploy on Render or Railway.
-
-Learning:
-
-- Production backend systems.
-- Deployment.
-- Monitoring.
-- Security basics.
-
+- Better NSE/Screener.in data scraping with caching
+- Real mutual fund API (AMFI) integration
+- Advanced pattern recognition (head & shoulders, etc.)
+- User login + cloud PostgreSQL
+- Mobile-responsive React frontend
+- Deploy to Render with CI/CD
+- Paid data feeds for production accuracy

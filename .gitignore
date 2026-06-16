@@ -6,6 +6,8 @@ venv/
 env/
 
 .env
+data/app.db
+data/vector_indexes/
 .streamlit/secrets.toml
 
 .pytest_cache/

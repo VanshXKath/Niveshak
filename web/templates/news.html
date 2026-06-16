@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="page-title">News Sentiment</h2>
+<p class="page-subtitle">Headlines analyzed in Python.</p>
+
+<form method="get" action="/news" class="form-row">
+  <div><label class="label">Symbol</label><input class="input" name="symbol" value="{{ symbol }}" /></div>
+  <div style="display:flex;align-items:flex-end;"><button type="submit" class="btn btn-primary" style="width:100%">Scan News</button></div>
+</form>
+
+{% if data %}
+<div class="grid grid-3" style="margin-top:1rem;">
+  <div class="card card-glow"><div class="metric-label">Overall</div><div class="metric-value"><span class="badge {{ data.overall_sentiment | sentiment_class }}">{{ data.overall_sentiment }}</span></div></div>
+  <div class="card"><div class="metric-label">Avg Score</div><div class="metric-value">{{ data.average_score }}</div></div>
+  <div class="card"><div class="metric-label">Articles</div><div class="metric-value">{{ data.articles | length }}</div></div>
+</div>
+<div class="card" style="margin-top:1rem;">
+  <p style="margin-bottom:1rem; color:var(--text-muted);">{{ data.summary }}</p>
+  {% for article in data.articles %}
+  <div class="list-item">
+    <span class="badge {{ article.sentiment | sentiment_class }}">{{ article.sentiment }}</span>
+    <strong>{{ article.title }}</strong><br>
+    <span style="color:var(--text-muted);">{{ article.impact }}</span>
+    {% if article.link %}<br><a href="{{ article.link }}" target="_blank" style="color:var(--primary);">Read article →</a>{% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="page-title">Fundamental Analysis</h2>
+<p class="page-subtitle">Financial ratios — screener.in style cards.</p>
+{% if error %}<div class="alert alert-error">{{ error }}</div>{% endif %}
+
+<form method="get" action="/fundamental" class="form-row">
+  <div><label class="label">Symbol</label><input class="input" name="symbol" value="{{ symbol }}" /></div>
+  <div style="display:flex;align-items:flex-end;"><button type="submit" class="btn btn-primary" style="width:100%">Analyze</button></div>
+</form>
+
+{% if data %}
+<div class="grid grid-4" style="margin-top:1rem;">
+  {% for metric in data.metrics %}
+  <div class="card"><div class="metric-label">{{ metric.name }}</div><div class="metric-value" style="font-size:1.1rem;">{{ metric.value or "—" }}</div></div>
+  {% endfor %}
+</div>
+<div class="grid grid-2" style="margin-top:1rem;">
+  <div class="card">
+    <h3>Strengths & Opportunities</h3>
+    {% for item in data.strengths %}<p class="alert alert-success">{{ item }}</p>{% endfor %}
+    {% for item in data.opportunities %}<p class="alert alert-info">{{ item }}</p>{% endfor %}
+  </div>
+  <div class="card">
+    <h3>Weaknesses & Risks</h3>
+    {% for item in data.weaknesses %}<p class="alert alert-error">{{ item }}</p>{% endfor %}
+    {% for item in data.risks %}<p class="alert alert-error">{{ item }}</p>{% endfor %}
+  </div>
+</div>
+{% endif %}
+{% endblock %}

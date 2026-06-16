@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="page-title">Watchlist & Alerts</h2>
+<p class="page-subtitle">Tradomate-style tracking — pure HTML forms.</p>
+
+{% if message %}<div class="alert alert-success">{{ message }}</div>{% endif %}
+
+<div class="grid grid-2">
+  <div class="card">
+    <h3>Add to watchlist</h3>
+    <form method="post" action="/watchlist/add" style="margin-top:0.75rem;">
+      <input class="input" name="symbol" value="INFY" style="margin-bottom:0.75rem;" required />
+      <input class="input" name="notes" placeholder="Notes" style="margin-bottom:0.75rem;" />
+      <button type="submit" class="btn btn-ghost">Add</button>
+    </form>
+  </div>
+  <div class="card">
+    <h3>Create alert</h3>
+    <form method="post" action="/watchlist/alert" style="margin-top:0.75rem;">
+      <input class="input" name="symbol" value="RELIANCE" style="margin-bottom:0.75rem;" required />
+      <select class="select" name="alert_type" style="margin-bottom:0.75rem;">
+        <option value="price_above">Price above</option>
+        <option value="price_below">Price below</option>
+        <option value="rsi_above">RSI above</option>
+        <option value="rsi_below">RSI below</option>
+      </select>
+      <input class="input" name="threshold" type="number" value="2500" style="margin-bottom:0.75rem;" required />
+      <button type="submit" class="btn btn-ghost">Create Alert</button>
+    </form>
+  </div>
+</div>
+
+<p class="alert alert-info" style="margin-top:1rem;">{{ data.beginner_summary }}</p>
+
+<div class="grid grid-2" style="margin-top:1rem;">
+  <div class="card">
+    <h3>Watchlist</h3>
+    {% for item in data.watchlist %}
+    <div class="list-item"><strong>{{ item.symbol }}</strong><br><span style="color:var(--text-muted);">{{ item.notes or "—" }}</span></div>
+    {% else %}<p style="color:var(--text-muted);">Empty watchlist.</p>{% endfor %}
+  </div>
+  <div class="card">
+    <h3>Alerts ({{ data.triggered_count }} triggered)</h3>
+    {% for alert in data.alerts %}
+    <div class="list-item">
+      {% if alert.triggered %}🔔{% else %}⏳{% endif %}
+      <strong>{{ alert.symbol }}</strong> {{ alert.alert_type }} @ {{ alert.threshold }}<br>
+      <span style="color:var(--text-muted);">{{ alert.trigger_detail or "" }}</span>
+    </div>
+    {% else %}<p style="color:var(--text-muted);">No alerts yet.</p>{% endfor %}
+  </div>
+</div>
+
+<form method="get" action="/watchlist" style="margin-top:1rem;">
+  <button type="submit" class="btn btn-primary">Refresh Intelligence</button>
+</form>
+{% endblock %}

@@ -1,6 +1,18 @@
 from pydantic import BaseModel, Field
 
 
+class StockSearchResult(BaseModel):
+    symbol: str
+    name: str
+    exchange: str | None = None
+    quote_type: str | None = None
+
+
+class StockSearchResponse(BaseModel):
+    query: str
+    results: list[StockSearchResult]
+
+
 class StockSummaryResponse(BaseModel):
     symbol: str
     company_name: str
@@ -16,6 +28,7 @@ class StockSummaryResponse(BaseModel):
     sector: str | None = None
     industry: str | None = None
     website: str | None = None
+    data_source: str | None = None
     beginner_summary: str
 
 
@@ -33,4 +46,5 @@ class StockHistoryResponse(BaseModel):
     period: str
     interval: str
     prices: list[StockHistoryPoint]
+    data_source: str | None = None
 

@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="page-title">Stock Research</h2>
+<p class="page-subtitle">Company profile, metrics & charts — rendered by Python on the server.</p>
+
+{% if error %}<div class="alert alert-error">{{ error }}</div>{% endif %}
+
+<form method="get" action="/stocks" class="form-row">
+  <div>
+    <label class="label">Symbol</label>
+    <input class="input" name="symbol" value="{{ symbol }}" />
+  </div>
+  <div>
+    <label class="label">Chart period</label>
+    <select class="select" name="period">
+      {% for p in ["1mo", "3mo", "6mo", "1y", "5y"] %}
+      <option value="{{ p }}" {% if period == p %}selected{% endif %}>{{ p }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div style="display:flex; align-items:flex-end;">
+    <button type="submit" class="btn btn-primary" style="width:100%;">Analyze Stock</button>
+  </div>
+</form>
+
+{% if summary %}
+<div class="grid grid-4" style="margin-top:1rem;">
+  <div class="card"><div class="metric-label">Price</div><div class="metric-value">{{ summary.current_price | inr }}</div></div>
+  <div class="card"><div class="metric-label">Prev Close</div><div class="metric-value">{{ summary.previous_close | inr }}</div></div>
+  <div class="card"><div class="metric-label">PE Ratio</div><div class="metric-value">{{ summary.pe_ratio or "—" }}</div></div>
+  <div class="card"><div class="metric-label">Market Cap</div><div class="metric-value">{{ summary.market_cap | large_inr }}</div></div>
+  <div class="card"><div class="metric-label">Day High</div><div class="metric-value">{{ summary.day_high | inr }}</div></div>
+  <div class="card"><div class="metric-label">Day Low</div><div class="metric-value">{{ summary.day_low | inr }}</div></div>
+  <div class="card"><div class="metric-label">Volume</div><div class="metric-value">{{ "{:,}".format(summary.volume) if summary.volume else "—" }}</div></div>
+  <div class="card"><div class="metric-label">Data Source</div><div class="metric-value" style="font-size:1rem;">{{ summary.data_source or "n/a" }}</div></div>
+</div>
+
+<div class="card" style="margin-top:1rem;">
+  <h3>{{ summary.company_name }}</h3>
+  {% if chart_html %}
+  <div class="chart-box">{{ chart_html | safe }}</div>
+  {% endif %}
+</div>
+
+<div class="grid grid-2" style="margin-top:1rem;">
+  <div class="card">
+    <h3>Beginner summary</h3>
+    <p style="margin-top:0.75rem; color:var(--text-muted); line-height:1.6;">{{ summary.beginner_summary }}</p>
+  </div>
+  <div class="card">
+    <h3>Company details</h3>
+    <p style="margin-top:0.75rem; color:var(--text-muted);">
+      <strong>Symbol:</strong> {{ summary.symbol }}<br>
+      <strong>Sector:</strong> {{ summary.sector or "—" }}<br>
+      <strong>Industry:</strong> {{ summary.industry or "—" }}<br>
+      {% if summary.website %}<a href="{{ summary.website }}" target="_blank" style="color:var(--primary);">Company website →</a>{% endif %}
+    </p>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

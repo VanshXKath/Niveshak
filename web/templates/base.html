@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ title }} · NiveshakAI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/theme.css" />
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-logo">NA</div>
+        <div>
+          <h1>NiveshakAI</h1>
+          <p>AI Stock Screener India</p>
+        </div>
+      </div>
+      <nav>
+        {% for item in nav_items %}
+        <a href="{{ item.href }}" class="nav-link {% if page_key == item.key %}active{% endif %}">
+          <span>{{ item.icon }}</span>
+          <span>{{ item.label }}</span>
+        </a>
+        {% endfor %}
+      </nav>
+      <div class="disclaimer" style="margin-top:2rem;">
+        Educational only. Not investment advice.
+      </div>
+    </aside>
+
+    <div class="main">
+      <header class="topbar">
+        <form method="get" action="/stocks" class="search-box">
+          <span>🔍</span>
+          <input name="symbol" type="text" placeholder="NSE symbol e.g. RELIANCE" value="{{ default_symbol }}" />
+          <button type="submit" class="btn btn-primary" style="margin-left:0.5rem;">Analyze</button>
+        </form>
+      </header>
+
+      <main class="content">
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+  </div>
+</body>
+</html>

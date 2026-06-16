@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="page-title">Dashboard</h2>
+<p class="page-subtitle">Your Indian market command center — built with HTML, CSS & Python only.</p>
+
+{% for err in errors %}
+<div class="alert alert-error">{{ err }}</div>
+{% endfor %}
+
+<div class="grid grid-4">
+  <div class="card card-glow">
+    <div class="metric-label">NIFTY PE</div>
+    <div class="metric-value">{{ market.current_pe if market else "—" }}</div>
+  </div>
+  <div class="card">
+    <div class="metric-label">Market Mood</div>
+    <div class="metric-value">{{ market.valuation_status if market else "—" }}</div>
+  </div>
+  <div class="card">
+    <div class="metric-label">Historical Avg PE</div>
+    <div class="metric-value">{{ market.historical_average_pe if market else "—" }}</div>
+  </div>
+  <div class="card">
+    <div class="metric-label">{{ symbol }} Price</div>
+    <div class="metric-value">{{ stock.current_price | inr if stock else "—" }}</div>
+  </div>
+</div>
+
+<div class="grid grid-2" style="margin-top:1rem;">
+  <div class="card">
+    <h3>Market insight</h3>
+    <p style="margin-top:0.75rem; color:var(--text-muted); line-height:1.6;">
+      {{ market.beginner_summary if market else "Market data loading failed." }}
+    </p>
+  </div>
+  <div class="card">
+    <h3>Featured stock</h3>
+    <p style="margin-top:0.75rem; color:var(--text-muted); line-height:1.6;">
+      {{ stock.beginner_summary if stock else "Search a stock from the top bar." }}
+    </p>
+  </div>
+</div>
+
+<h3 style="margin:1.5rem 0 1rem;">Explore platform</h3>
+<div class="grid grid-3">
+  {% for item in nav_items %}{% if item.key != "dashboard" %}
+  <a href="{{ item.href }}" class="card feature-card">
+    <div style="font-size:1.5rem; margin-bottom:0.5rem;">{{ item.icon }}</div>
+    <strong>{{ item.label }}</strong>
+    <p style="color:var(--text-muted); font-size:0.88rem; margin-top:0.35rem;">Open module</p>
+  </a>
+  {% endif %}{% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="page-title">Market Valuation</h2>
+<p class="page-subtitle">Is NIFTY expensive or cheap?</p>
+
+<div class="grid grid-3" style="margin-top:1rem;">
+  <div class="card card-glow"><div class="metric-label">Index</div><div class="metric-value">{{ data.index_name }}</div></div>
+  <div class="card"><div class="metric-label">Current PE</div><div class="metric-value">{{ data.current_pe or "—" }}</div></div>
+  <div class="card"><div class="metric-label">Status</div><div class="metric-value">{{ data.valuation_status }}</div></div>
+</div>
+<div class="card" style="margin-top:1rem;">
+  <p style="color:var(--text-muted); line-height:1.6;">{{ data.explanation }}</p>
+  <p style="margin-top:0.75rem;">{{ data.beginner_summary }}</p>
+</div>
+{% endblock %}

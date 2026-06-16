@@ -1,0 +1,12 @@
+{
+  "Banking": ["HDFCBANK", "ICICIBANK", "SBIN", "KOTAKBANK", "AXISBANK"],
+  "IT Services": ["TCS", "INFY", "HCLTECH", "WIPRO", "TECHM"],
+  "Energy & Oil": ["RELIANCE", "ONGC", "NTPC", "POWERGRID"],
+  "FMCG": ["HINDUNILVR", "ITC", "NESTLEIND"],
+  "Automobile": ["MARUTI", "TATAMOTORS", "M&M"],
+  "Pharma": ["SUNPHARMA"],
+  "Infrastructure": ["LT", "ADANIPORTS", "ULTRACEMCO"],
+  "Telecom": ["BHARTIARTL"],
+  "Finance": ["BAJFINANCE", "BAJAJFINSV"],
+  "Adani Group": ["ADANIENT", "ADANIPORTS"]
+}

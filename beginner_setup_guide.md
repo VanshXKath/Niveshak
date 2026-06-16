@@ -7,10 +7,16 @@ This guide assumes you are new to coding.
 A project folder is like a school bag for one subject. Everything related to this stock screener lives inside:
 
 ```text
-C:\Users\vansh\OneDrive\Documents\Screener
+E:\stock_screener_phase1_with_guides
 ```
 
 Keep code, documentation, and settings together so the project stays organized.
+
+You can also run the automated setup script:
+
+```powershell
+.\scripts\setup.ps1
+```
 
 ## 2. What Is Python?
 
@@ -75,6 +81,8 @@ This project uses:
 - `requests`: lets Streamlit call the backend.
 - `python-dotenv`: loads settings from `.env`.
 - `pydantic`: validates API response data.
+- `pytest`: runs automated tests.
+- `httpx`: used by FastAPI test client.
 
 Install everything:
 
@@ -161,3 +169,20 @@ Ctrl + C
 ```
 
 Do this in each terminal where a server is running.
+
+## 9. How To Test
+
+Tests check that your code works without needing live market data.
+
+```powershell
+python -m pytest
+```
+
+If all tests pass, you will see a green summary with no failures.
+
+## 10. How To Customize
+
+- Add more stocks to `backend/app/data/nse_popular_stocks.json`.
+- Change default chart period in `frontend/streamlit_app.py`.
+- Change backend port in `.env` (`BACKEND_PORT=8000`).
+- Add new API fields in `backend/app/models/stock.py` and fetch them in `stock_service.py`.
